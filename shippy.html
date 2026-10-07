@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shippy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #22323e;
+    --ink-soft: #5f7585;
+    --muted: #8da0ad;
+    --paper: #f3f6f9;
+    --sky-top: #f6fafd;
+    --sky-bottom: #dcecf6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 22px; padding: 32px 16px;
+    background: var(--paper);
+    font-family: 'Nunito', ui-rounded, 'SF Pro Rounded', system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    overflow: hidden; user-select: none; -webkit-user-select: none;
+  }
+
+  /* ---------- page chrome ---------- */
+  .head { text-align: center; animation: rise .9s cubic-bezier(.2,.8,.2,1) both; }
+  h1 { font-weight: 800; letter-spacing: .42em; font-size: 20px; margin-left: .42em; }
+  .hint { color: var(--muted); font-weight: 600; font-size: 14px; margin-top: 4px; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+
+  .scene {
+    position: relative; width: min(840px, 94vw); aspect-ratio: 900 / 520;
+    border-radius: 26px; overflow: hidden; background: var(--sky-bottom);
+    box-shadow: 0 50px 90px -50px rgba(34,50,62,.45), 0 18px 36px -22px rgba(34,50,62,.28), inset 0 0 0 1px rgba(255,255,255,.6);
+    animation: reveal 1.2s cubic-bezier(.2,.8,.2,1) .1s both;
+  }
+  @keyframes reveal { from { opacity: 0; transform: translateY(16px) scale(.985); } }
+  svg { display: block; width: 100%; height: 100%; }
+
+  .reset {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px 10px 16px; border-radius: 999px;
+    border: 1.5px solid rgba(34,50,62,.18); background: #fff; color: var(--ink);
+    font: 700 14px 'Nunito', system-ui, sans-serif; cursor: pointer;
+    box-shadow: 0 10px 24px -14px rgba(34,50,62,.35);
+    opacity: 0; transform: translateY(6px); pointer-events: none;
+    transition: opacity .5s ease, transform .5s cubic-bezier(.2,.8,.2,1), background .2s, color .2s, border-color .2s, box-shadow .2s;
+  }
+  .reset.show { opacity: 1; transform: none; pointer-events: auto; }
+  .reset:hover { background: var(--ink); color: #fff; border-color: var(--ink); box-shadow: 0 14px 28px -14px rgba(34,50,62,.5); }
+  .reset:active { transform: translateY(1px) scale(.98); }
+  .reset svg { width: 16px; height: 16px; }
+  .reset:hover svg { animation: spin .6s cubic-bezier(.2,.8,.2,1); }
+  @keyframes spin { to { transform: rotate(-360deg); } }
+
+  /* ---------- sky ---------- */
+  .cloud { animation: drift linear infinite; }
+  @keyframes drift { from { transform: translateX(0); } to { transform: translateX(-1300px); } }
+  .bird { animation: drift 48s linear infinite; }
+  .wing { transform-box: fill-box; transform-origin: 50% 100%; animation: flap .75s ease-in-out infinite alternate; fill: none; stroke: #6b8395; stroke-width: 1.7; stroke-linecap: round; }
+  @keyframes flap { from { transform: scaleY(1); } to { transform: scaleY(.3); } }
+  .sun-ring { transform-box: fill-box; transform-origin: center; animation: breathe 6s ease-in-out infinite; }
+  @keyframes breathe { 0%,100% { transform: scale(1); opacity: .5; } 50% { transform: scale(1.08); opacity: .8; } }
+
+  /* ---------- water ---------- */
+  .wave { animation: flow linear infinite; }
+  @keyframes flow { to { transform: translateX(var(--p)); } }
+  .sparkle { stroke: #fff; stroke-width: 2; stroke-linecap: round; opacity: 0; animation: twinkle ease-in-out infinite; }
+  @keyframes twinkle { 0%, 100% { opacity: 0; } 50% { opacity: .85; } }
+
+  /* ---------- ship ---------- */
+  .bobber { transform-box: view-box; transform-origin: 470px 340px; animation: bob 5.6s ease-in-out infinite; }
+  #ship { cursor: pointer; }
+  @keyframes bob {
+    0%, 100% { transform: translateY(0) rotate(-.7deg); }
+    50%      { transform: translateY(-5px) rotate(.7deg); }
+  }
+  #wobble { transform-box: view-box; transform-origin: 470px 372px; }
+  #wobble.wobbling { animation: wobble .85s cubic-bezier(.3,.7,.3,1) both; }
+  @keyframes wobble {
+    0%   { transform: rotate(0); }
+    14%  { transform: rotate(-3.6deg) translateY(2px); }
+    34%  { transform: rotate(3.1deg); }
+    54%  { transform: rotate(-2deg); }
+    74%  { transform: rotate(1.1deg); }
+    100% { transform: rotate(0); }
+  }
+
+  .radar { transform-box: fill-box; transform-origin: center; animation: radar 2.8s ease-in-out infinite; }
+  @keyframes radar { 0% { transform: scaleX(1); } 50% { transform: scaleX(-1); } 100% { transform: scaleX(1); } }
+  .mastlight { animation: beacon 1.8s ease-in-out infinite alternate; }
+  @keyframes beacon { from { opacity: 1; } to { opacity: .15; } }
+  .pennant { transform-box: fill-box; transform-origin: 0% 50%; animation: flutter 1.1s ease-in-out infinite alternate; }
+  @keyframes flutter { from { transform: rotate(-5deg) scaleY(1); } to { transform: rotate(6deg) scaleY(.88); } }
+  .bowfoam { transform-box: fill-box; transform-origin: 0% 50%; animation: foam 1.5s ease-in-out infinite alternate; }
+  @keyframes foam { from { transform: scale(1, 1); opacity: .75; } to { transform: scale(1.14, .85); opacity: .95; } }
+
+  .puff { fill: #d3dee7; opacity: 0; transform-box: fill-box; transform-origin: center; animation: puff 3.4s ease-out infinite; }
+  @keyframes puff {
+    0%   { opacity: 0;   transform: translate(0, 0) scale(.35); }
+    12%  { opacity: .85; }
+    100% { opacity: 0;   transform: translate(-58px, -84px) scale(2.6); }
+  }
+
+  /* ---------- face ---------- */
+  .eye { transform-box: fill-box; transform-origin: center; animation: blink 4.6s ease-in-out infinite; }
+  @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.08); } }
+  .wobbling .eye { animation: squint .85s ease both; }
+  @keyframes squint { 0%, 100% { transform: scaleY(1); } 20%, 70% { transform: scaleY(.55); } }
+  .pupil { transition: transform .18s cubic-bezier(.2,.8,.2,1); }
+  .cheek { fill: #ff9aa6; opacity: .62; }
+  .mouth { transition: opacity .15s ease; }
+  #mouthHappy, #mouthO { opacity: 0; }
+  .live.hovered #mouthCalm { opacity: 0; }
+  .live.hovered #mouthHappy { opacity: 1; }
+  .live.startled #mouthCalm, .live.startled #mouthHappy { opacity: 0; }
+  .live.startled #mouthO { opacity: 1; }
+
+  /* ---------- speech bubble ---------- */
+  .msg { opacity: 0; transform-box: fill-box; transform-origin: 20% 100%; transform: translateY(8px) scale(.6);
+         transition: opacity .22s ease, transform .4s cubic-bezier(.34,1.56,.64,1); pointer-events: none; }
+  .msg.show { opacity: 1; transform: translateY(0) scale(1); }
+  .msg text { fill: var(--ink); font: 700 15px 'Nunito', system-ui, sans-serif; }
+
+  /* ---------- fx ---------- */
+  .ripple { fill: none; stroke: #fff; stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: ripple 1s cubic-bezier(.2,.8,.2,1) forwards; }
+  @keyframes ripple { 0% { opacity: .9; transform: scale(.25, .25); } 100% { opacity: 0; transform: scale(2.6, 2.2); } }
+  .burst { fill: #fff; transform-box: fill-box; transform-origin: center; animation: burst .55s ease-out forwards; }
+  @keyframes burst { 0% { opacity: .9; transform: scale(.4, .6); } 100% { opacity: 0; transform: scale(1.9, 1.2); } }
+  .drop { fill: #fff; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cloud, .bird, .wing, .sun-ring, .wave, .sparkle, .bobber, .radar, .mastlight, .pennant, .bowfoam, .puff, .eye { animation: none !important; }
+    .puff { opacity: 0; }
+    .sparkle { opacity: .5; }
+  }
+</style>
+</head>
+<body>
+  <header class="head">
+    <h1>SHIPPY</h1>
+    <p class="hint">Click Shippy — he shakes his cargo overboard.</p>
+  </header>
+
+  <div class="scene" id="scene">
+    <svg viewBox="0 0 900 520" role="img" aria-label="Shippy the container ship">
+      <defs>
+        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#f7fbfe"/>
+          <stop offset="1" stop-color="#d9eaf5"/>
+        </linearGradient>
+        <linearGradient id="farGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#b9dff2"/>
+          <stop offset="1" stop-color="#9ccfea"/>
+        </linearGradient>
+        <linearGradient id="w1" gradientUnits="userSpaceOnUse" x1="0" y1="350" x2="0" y2="520">
+          <stop offset="0" stop-color="#92cdea"/><stop offset="1" stop-color="#6fb9e0"/>
+        </linearGradient>
+        <linearGradient id="w2" gradientUnits="userSpaceOnUse" x1="0" y1="356" x2="0" y2="520">
+          <stop offset="0" stop-color="#6cbbe3"/><stop offset="1" stop-color="#4aa3d6"/>
+        </linearGradient>
+        <linearGradient id="w3" gradientUnits="userSpaceOnUse" x1="0" y1="362" x2="0" y2="520">
+          <stop offset="0" stop-color="#4aa6d9"/><stop offset="1" stop-color="#2f87c2"/>
+        </linearGradient>
+
+        <linearGradient id="hullGrad" gradientUnits="userSpaceOnUse" x1="0" y1="284" x2="0" y2="362">
+          <stop offset="0" stop-color="#3e6880"/>
+          <stop offset="1" stop-color="#2d4c60"/>
+        </linearGradient>
+        <linearGradient id="whiteSide" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#ffffff"/>
+          <stop offset="1" stop-color="#e2eaf0"/>
+        </linearGradient>
+        <linearGradient id="boxShade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fff" stop-opacity=".22"/>
+          <stop offset=".45" stop-color="#fff" stop-opacity="0"/>
+          <stop offset="1" stop-color="#000" stop-opacity=".16"/>
+        </linearGradient>
+        <linearGradient id="reflFade" gradientUnits="userSpaceOnUse" x1="0" y1="362" x2="0" y2="450">
+          <stop offset="0" stop-color="#fff" stop-opacity=".55"/>
+          <stop offset=".55" stop-color="#fff" stop-opacity=".12"/>
+          <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+        </linearGradient>
+        <mask id="reflMask"><rect x="0" y="362" width="900" height="160" fill="url(#reflFade)"/></mask>
+
+        <path id="hullPath" d="M136 296 C118 310 116 340 128 362 C136 384 160 402 200 402 L700 402 C760 402 790 400 800 388 C808 378 792 364 772 362 C778 338 786 310 792 284 Q470 300 136 296 Z"/>
+        <clipPath id="hullClip"><use href="#hullPath"/></clipPath>
+
+        <filter id="softBlur" x="-5%" y="-20%" width="110%" height="140%"><feGaussianBlur stdDeviation="1.6"/></filter>
+        <filter id="smokeBlur" filterUnits="userSpaceOnUse" x="40" y="20" width="240" height="200"><feGaussianBlur stdDeviation="1.8"/></filter>
+        <filter id="bubbleShadow" x="-20%" y="-30%" width="140%" height="180%">
+          <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#22323e" flood-opacity=".16"/>
+        </filter>
+        <filter id="sunGlow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="14"/></filter>
+      </defs>
+
+      <!-- sky -->
+      <rect width="900" height="520" fill="url(#skyGrad)"/>
+      <g id="sun">
+        <circle cx="770" cy="92" r="46" fill="#ffd98a" opacity=".45" filter="url(#sunGlow)" class="sun-ring"/>
+        <circle cx="770" cy="92" r="30" fill="#ffd57e"/>
+        <circle cx="770" cy="92" r="30" fill="#fff" opacity=".18"/>
+      </g>
+      <g id="clouds"></g>
+      <g id="birds"></g>
+
+      <!-- far water -->
+      <rect x="0" y="330" width="900" height="190" fill="url(#farGrad)"/>
+      <rect x="0" y="329" width="900" height="2" fill="#fff" opacity=".55"/>
+
+      <!-- ship -->
+      <g id="enter">
+        <g id="ship" class="bobber">
+          <!-- smoke (behind the funnel) -->
+          <g id="smoke" filter="url(#smokeBlur)">
+            <g class="puff" style="animation-delay:0s"><circle cx="163" cy="167" r="6.5"/><circle cx="157" cy="171" r="4.5"/><circle cx="169" cy="171" r="4.5"/></g>
+            <g class="puff" style="animation-delay:1.15s"><circle cx="163" cy="167" r="6"/><circle cx="158" cy="171" r="4"/><circle cx="168" cy="170" r="4.5"/></g>
+            <g class="puff" style="animation-delay:2.3s"><circle cx="163" cy="167" r="7"/><circle cx="157" cy="171" r="5"/><circle cx="169" cy="171" r="4.5"/></g>
+          </g>
+
+          <g id="wobble">
+            <!-- ship artwork (reflected below) -->
+            <g id="shipArt">
+              <!-- hull -->
+              <g clip-path="url(#hullClip)">
+                <rect x="100" y="270" width="720" height="140" fill="url(#hullGrad)"/>
+                <rect x="100" y="362" width="720" height="60" fill="#2a5571"/>
+                <rect x="100" y="284" width="720" height="14" fill="#fff" opacity=".07"/>
+                <rect x="100" y="356" width="720" height="3" fill="#f2f6f8" opacity=".9"/>
+                <rect x="100" y="359" width="720" height="5" fill="#e4695b"/>
+              </g>
+              <use href="#hullPath" fill="none" stroke="#1d3140" stroke-opacity=".35" stroke-width="1.2"/>
+
+              <!-- hatch covers / deck -->
+              <rect x="274" y="286" width="464" height="12" rx="2" fill="#4a6c84"/>
+              <g id="lashing" stroke="#5c7f96" stroke-width="2" stroke-linecap="round"></g>
+              <!-- bulwark highlight -->
+              <path d="M136 296 Q470 300 792 284" fill="none" stroke="#e9eef2" stroke-opacity=".55" stroke-width="2"/>
+
+              <!-- funnel -->
+              <path d="M150 294 V177 Q150 170 157 170 H169 Q176 170 176 177 V294 Z" fill="url(#whiteSide)"/>
+              <path d="M150 184 V177 Q150 170 157 170 H169 Q176 170 176 177 V184 Z" fill="#2b4455"/>
+              <rect x="150" y="188" width="26" height="9" fill="#2fa7a0"/>
+              <rect x="150" y="294" width="26" height="2" fill="#000" opacity=".12"/>
+
+              <!-- accommodation block -->
+              <rect x="182" y="206" width="86" height="90" rx="3" fill="url(#whiteSide)"/>
+              <g stroke="#cfdae3" stroke-width="1"><path d="M182 230 H268 M182 254 H268 M182 278 H268"/></g>
+              <g id="windows" fill="#35506a" fill-opacity=".85"></g>
+              <!-- bridge -->
+              <rect x="168" y="182" width="116" height="26" rx="4" fill="#fdfdfe"/>
+              <rect x="168" y="206" width="116" height="2" fill="#000" opacity=".1"/>
+              <rect x="174" y="189" width="104" height="10" rx="2.5" fill="#2f4858"/>
+              <rect x="176" y="190.5" width="100" height="3" rx="1.5" fill="#fff" opacity=".18"/>
+              <!-- mast -->
+              <path d="M226 182 V148" stroke="#35506a" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M216 158 H236" stroke="#35506a" stroke-width="2" stroke-linecap="round"/>
+              <rect class="radar" x="218" y="150.5" width="16" height="3" rx="1.5" fill="#35506a"/>
+              <circle class="mastlight" cx="226" cy="145" r="2.2" fill="#ef6a5a"/>
+
+              <!-- cargo -->
+              <g id="cargo"></g>
+
+              <!-- forecastle -->
+              <path d="M746 280 H788" stroke="#e9eef2" stroke-opacity=".8" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M752 280 v5 M764 280 v5 M776 280 v5 M786 280 v5" stroke="#e9eef2" stroke-opacity=".8" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M770 284 V258" stroke="#35506a" stroke-width="2" stroke-linecap="round"/>
+              <path class="pennant" d="M771 259 L788 263.5 L771 268 Z" fill="#e4695b"/>
+
+              <!-- foam -->
+              <path class="bowfoam" d="M770 360 q16 -9 32 0 q-12 9 -32 4 z" fill="#fff"/>
+              <path d="M130 362 q-30 -4 -70 2 q30 6 70 2 z" fill="#fff" opacity=".55"/>
+              <path d="M70 368 q-24 0 -46 2" stroke="#fff" stroke-opacity=".45" stroke-width="2" stroke-linecap="round" fill="none"/>
+            </g>
+
+            <!-- hull markings -->
+            <g id="markings">
+              <text x="178" y="334" fill="#fff" fill-opacity=".8" font-family="Nunito, system-ui, sans-serif" font-weight="800" font-size="11" letter-spacing="2.5">SHIPPY</text>
+              <g transform="translate(752 300)" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="1.6" stroke-linecap="round">
+                <circle cx="0" cy="-7" r="2"/><path d="M0 -5 V8"/><path d="M-4 -1 H4"/><path d="M-7 3.5 Q0 11 7 3.5"/>
+              </g>
+              <path d="M730 336 h6 M730 346 h6" stroke="#fff" stroke-opacity=".45" stroke-width="1.4" stroke-linecap="round"/>
+            </g>
+
+            <!-- face -->
+            <g id="face">
+              <circle class="cheek" cx="680" cy="335" r="5.5"/>
+              <circle class="cheek" cx="752" cy="335" r="5.5"/>
+              <g class="eye">
+                <circle cx="696" cy="320" r="9.5" fill="#fff"/>
+                <g class="pupil" id="pupilL">
+                  <circle cx="696" cy="321" r="4.4" fill="#1b2a35"/>
+                  <circle cx="694.2" cy="318.8" r="1.6" fill="#fff"/>
+                </g>
+              </g>
+              <g class="eye" style="animation-delay:.06s">
+                <circle cx="736" cy="320" r="9.5" fill="#fff"/>
+                <g class="pupil" id="pupilR">
+                  <circle cx="736" cy="321" r="4.4" fill="#1b2a35"/>
+                  <circle cx="734.2" cy="318.8" r="1.6" fill="#fff"/>
+                </g>
+              </g>
+              <path class="mouth" id="mouthCalm" d="M706 341 Q716 350 726 341" fill="none" stroke="#f4f7f9" stroke-width="2.6" stroke-linecap="round"/>
+              <path class="mouth" id="mouthHappy" d="M703 340 Q716 358 729 340 Z" fill="#1b2a35" stroke="#f4f7f9" stroke-width="2.4" stroke-linejoin="round"/>
+              <circle class="mouth" id="mouthO" cx="716" cy="345" r="4.2" fill="#1b2a35" stroke="#f4f7f9" stroke-width="2.2"/>
+            </g>
+          </g>
+        </g>
+      </g>
+
+      <!-- loose cargo (in front of ship, behind water) -->
+      <g id="loose"></g>
+
+      <!-- front water -->
+      <g id="water"></g>
+
+      <!-- reflection on the surface -->
+      <g id="enterRefl">
+        <g class="bobber">
+          <g mask="url(#reflMask)" filter="url(#softBlur)" opacity=".55">
+            <use href="#shipArt" transform="matrix(1 0 0 -1 0 724)"/>
+          </g>
+        </g>
+      </g>
+      <g id="sparkles"></g>
+      <g id="fx"></g>
+
+      <!-- speech bubble -->
+      <g id="msg" class="msg">
+        <g filter="url(#bubbleShadow)">
+          <rect id="msgBox" x="736" y="196" width="140" height="40" rx="14" fill="#fff"/>
+          <path id="msgTail" d="M766 235 l-12 16 l24 -8 z" fill="#fff"/>
+        </g>
+        <text id="msgText" x="806" y="222" text-anchor="middle">Ahoy! ⚓</text>
+      </g>
+    </svg>
+  </div>
+
+  <button class="reset" id="reset" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+    Reload cargo
+  </button>
+
+<script>
+  const NS = 'http://www.w3.org/2000/svg';
+  const $ = id => document.getElementById(id);
+  const el = (tag, attrs = {}, parent) => {
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  };
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const pick = a => a[(Math.random() * a.length) | 0];
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const scene = $('scene'), ship = $('ship'), wobble = $('wobble'), enter = $('enter');
+  const cargo = $('cargo'), loose = $('loose'), fx = $('fx');
+  const msg = $('msg'), msgText = $('msgText'), msgBox = $('msgBox'), msgTail = $('msgTail');
+  const resetBtn = $('reset');
+  const pupils = [$('pupilL'), $('pupilR')];
+
+  const WL = 362, G = 1500;
+
+  /* ---------- sky dressing ---------- */
+  function cloud(x, y, s, dur, delay) {
+    const o = el('g', { class: 'cloud', style: `animation-duration:${dur}s;animation-delay:${delay}s` }, $('clouds'));
+    const g = el('g', { transform: `translate(${x} ${y}) scale(${s})`, fill: '#fff', 'fill-opacity': '.92' }, o);
+    [[0, 0, 16], [20, -10, 22], [46, -4, 18], [64, 4, 12]].forEach(([cx, cy, r]) => el('circle', { cx, cy, r }, g));
+    el('rect', { x: -12, y: 0, width: 88, height: 16, rx: 8 }, g);
+  }
+  cloud(1000, 78, 1, 110, -34);
+  cloud(1000, 128, .68, 150, -96);
+  cloud(1000, 52, .5, 170, -140);
+
+  function bird(x, y, s, delay) {
+    const o = el('g', { class: 'bird', style: `animation-delay:${delay}s` }, $('birds'));
+    const g = el('g', { transform: `translate(${x} ${y}) scale(${s})` }, o);
+    el('path', { class: 'wing', d: 'M0 0 q5 -5 10 0 q5 -5 10 0', style: `animation-delay:${rnd(0, .7)}s` }, g);
+  }
+  bird(1000, 150, 1, -10);
+  bird(1000, 142, .8, -11.2);
+
+  /* ---------- water ---------- */
+  function wavePath(y, amp, period, x0, x1, bottom) {
+    const half = period / 2;
+    let d = `M${x0} ${y} q${half / 2} ${-amp} ${half} 0`;
+    for (let x = x0 + half; x < x1; x += half) d += ` t${half} 0`;
+    return d + ` V${bottom} H${x0} Z`;
+  }
+  [
+    { y: 354, amp: 4.5, period: 240, fill: 'url(#w1)', op: .74, dur: 17 },
+    { y: 360, amp: 5.5, period: 160, fill: 'url(#w2)', op: .8, dur: 10.5 },
+    { y: 368, amp: 6.5, period: 120, fill: 'url(#w3)', op: .88, dur: 6.8 },
+  ].forEach(w => el('path', {
+    class: 'wave', fill: w.fill, 'fill-opacity': w.op, stroke: '#fff', 'stroke-opacity': .45, 'stroke-width': 1.5,
+    d: wavePath(w.y, w.amp, w.period, -w.period * 2, 900 + w.period * 2, 560),
+    style: `--p:${-w.period}px;animation-duration:${w.dur}s`
+  }, $('water')));
+
+  for (let i = 0; i < 16; i++) {
+    const x = rnd(20, 880), y = rnd(378, 480), len = rnd(3, 9);
+    el('line', { class: 'sparkle', x1: x, y1: y, x2: x + len, y2: y, style: `animation-duration:${rnd(2.2, 4.5)}s;animation-delay:${rnd(0, 4)}s` }, $('sparkles'));
+  }
+
+  /* ---------- superstructure details ---------- */
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 5; c++)
+    el('rect', { x: 190 + c * 15, y: 214 + r * 24, width: 6, height: 8, rx: 1.5 }, $('windows'));
+
+  /* ---------- cargo ---------- */
+  const CW = 58, CH = 24, BAY_X0 = 284, BAY_PITCH = 64, TIER_PITCH = 26, DECK_Y = 286;
+  const C = { coral: '#ec6f5f', amber: '#f3b43f', teal: '#2fa7a0', blue: '#4f86d8', mint: '#7ccf9f', plum: '#8f7fd9' };
+  const BAYS = [
+    [C.coral, C.blue, C.amber], [C.teal, C.amber, C.mint], [C.blue, C.coral, C.plum],
+    [C.amber, C.teal], [C.mint, C.plum, C.coral], [C.blue, C.amber], [C.teal]
+  ];
+  for (let i = 1; i < BAYS.length; i++) {
+    const x = BAY_X0 + i * BAY_PITCH - 3;
+    el('path', { d: `M${x} 286 V236` }, $('lashing'));
+  }
+  const boxes = [];
+  BAYS.forEach((colors, bay) => colors.forEach((color, tier) => {
+    const x = BAY_X0 + bay * BAY_PITCH, y = DECK_Y - (tier + 1) * TIER_PITCH + 2;
+    const g = el('g', { class: 'box', transform: `translate(${x} ${y})` }, cargo);
+    el('rect', { width: CW, height: CH, rx: 2.5, fill: color }, g);
+    el('rect', { width: CW, height: CH, rx: 2.5, fill: 'url(#boxShade)' }, g);
+    el('path', { d: 'M9 3V21M19 3V21M29 3V21M39 3V21', stroke: '#000', 'stroke-opacity': .1, 'stroke-width': 1.5 }, g);
+    el('rect', { x: 48.5, y: .5, width: 9, height: 23, rx: 2, fill: '#000', 'fill-opacity': .12 }, g);
+    el('rect', { x: 51, y: 9, width: 4, height: 6, rx: 1, fill: '#fff', 'fill-opacity': .35 }, g);
+    el('rect', { x: 6, y: 5, width: 10, height: 2.5, rx: 1.25, fill: '#fff', 'fill-opacity': .6 }, g);
+    el('rect', { x: .5, y: .5, width: CW - 1, height: CH - 1, rx: 2.2, fill: 'none', stroke: '#000', 'stroke-opacity': .14 }, g);
+    boxes.push({ el: g, bay, tier, x, y, gone: false, body: null });
+  }));
+
+  /* ---------- speech ---------- */
+  const hoverLines = ['Hi there!', 'Ahoy! ⚓', 'Tee-hee!', 'Lovely day!'];
+  const dropLines  = ['Wheee! 📦', 'Oops! 💦', 'Overboard!', 'There it goes!', 'Man overbox!'];
+  const emptyLines = ['All clear! ✨', 'Deck’s empty!', 'Squeaky clean!', 'Nothing left!'];
+  let msgTimer;
+  function say(t) {
+    msgText.textContent = t;
+    const w = Math.max(90, msgText.getComputedTextLength() + 40);
+    const right = 876, x = right - w;
+    msgBox.setAttribute('x', x); msgBox.setAttribute('width', w);
+    msgText.setAttribute('x', x + w / 2);
+    msgTail.setAttribute('d', `M${x + 30} 235 l-12 16 l24 -8 z`);
+    msg.classList.remove('show'); void msg.getBBox();
+    msg.classList.add('show');
+    clearTimeout(msgTimer);
+    msgTimer = setTimeout(() => msg.classList.remove('show'), 1900);
+  }
+
+  /* ---------- entrance ---------- */
+  const enterOpts = { duration: reduceMotion ? 0 : 3000, delay: reduceMotion ? 0 : 350, easing: 'cubic-bezier(.16,.84,.24,1)', fill: 'both' };
+  const enterFrames = [{ transform: 'translateX(-900px)' }, { transform: 'translateX(0)' }];
+  $('enterRefl').animate(enterFrames, enterOpts);
+  const entrance = enter.animate(enterFrames, enterOpts);
+  entrance.onfinish = () => {
+    scene.classList.add('live');
+    say('Ahoy! ⚓');
+    resetBtn.classList.add('show');
+  };
+
+  /* ---------- hover + eyes ---------- */
+  ship.addEventListener('mouseenter', () => {
+    if (!scene.classList.contains('live')) return;
+    scene.classList.add('hovered');
+    if (!msg.classList.contains('show')) say(pick(hoverLines));
+  });
+  ship.addEventListener('mouseleave', () => scene.classList.remove('hovered'));
+
+  window.addEventListener('mousemove', e => {
+    if (!scene.classList.contains('live')) return;
+    pupils.forEach(p => {
+      const r = p.getBoundingClientRect();
+      const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+      const d = Math.min(3.2, Math.hypot(dx, dy) / 60), a = Math.atan2(dy, dx);
+      p.style.transform = `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d}px)`;
+    });
+  });
+
+  /* ---------- click: wobble + lose a container ---------- */
+  let startleTimer;
+  ship.addEventListener('click', () => {
+    if (!scene.classList.contains('live')) return;
+    wobble.classList.remove('wobbling'); void wobble.getBBox(); wobble.classList.add('wobbling');
+    scene.classList.add('startled');
+    clearTimeout(startleTimer);
+    startleTimer = setTimeout(() => scene.classList.remove('startled'), 800);
+
+    const aboard = boxes.filter(b => !b.gone);
+    if (!aboard.length) { say(pick(emptyLines)); return; }
+    const tops = [];
+    for (let bay = 0; bay < BAYS.length; bay++) {
+      const col = aboard.filter(b => b.bay === bay);
+      if (col.length) tops.push(col.reduce((a, b) => b.tier > a.tier ? b : a));
+    }
+    const maxTier = Math.max(...tops.map(b => b.tier));
+    launch(pick(tops.filter(b => b.tier === maxTier)));
+    say(pick(dropLines));
+  });
+  wobble.addEventListener('animationend', e => { if (e.animationName === 'wobble') wobble.classList.remove('wobbling'); });
+
+  /* ---------- physics ---------- */
+  const bodies = new Set();
+  let raf = 0, last = 0;
+  function tick(ts) {
+    const dt = Math.min(.033, last ? (ts - last) / 1000 : .016);
+    last = ts;
+    for (const b of bodies) if (b.step(dt)) bodies.delete(b);
+    raf = bodies.size ? requestAnimationFrame(tick) : (last = 0, 0);
+  }
+  function addBody(b) { bodies.add(b); if (!raf) raf = requestAnimationFrame(tick); }
+
+  function launch(box) {
+    box.el.getAnimations().forEach(a => a.cancel());
+    const M = loose.getCTM().inverse().multiply(box.el.getCTM());
+    const base = `matrix(${M.a} ${M.b} ${M.c} ${M.d} ${M.e} ${M.f})`;
+    const cx = M.a * CW / 2 + M.c * CH / 2 + M.e, cy = M.b * CW / 2 + M.d * CH / 2 + M.f;
+    loose.appendChild(box.el);
+    box.el.setAttribute('transform', base);
+
+    const side = Math.random() < .5 ? -1 : 1;
+    const b = {
+      x: 0, y: 0, ang: 0, t: 0, wet: false, wetT: 0,
+      vx: side * rnd(60, 150), vy: -rnd(150, 240), va: (Math.random() - .5) * 560
+    };
+    b.step = dt => {
+      b.t += dt;
+      if (!b.wet) b.vy += G * dt;
+      else { b.vy += (26 - b.vy) * dt * 3; b.vx += (-14 - b.vx) * dt * 2; b.va *= .97; }
+      b.x += b.vx * dt; b.y += b.vy * dt; b.ang += b.va * dt;
+      if (!b.wet && cy + b.y >= WL - 1) {
+        b.wet = true; b.wetT = b.t;
+        splash(cx + b.x, Math.abs(b.vy));
+        b.vx *= .3; b.vy = 34; b.va *= .3;
+      }
+      if (b.wet) {
+        const k = (b.t - b.wetT) / 1.5;
+        box.el.style.opacity = Math.max(0, 1 - k);
+        if (k >= 1) { box.el.style.visibility = 'hidden'; box.body = null; return true; }
+      }
+      box.el.setAttribute('transform', `translate(${b.x} ${b.y}) rotate(${b.ang} ${cx} ${cy}) ${base}`);
+      return false;
+    };
+    box.gone = true; box.body = b;
+    addBody(b);
+  }
+
+  function splash(x, speed) {
+    for (let i = 0; i < 2; i++) {
+      const r = el('ellipse', { class: 'ripple', cx: x, cy: WL + 3, rx: 22, ry: 5, style: `animation-delay:${i * .13}s` }, fx);
+      setTimeout(() => r.remove(), 1300);
+    }
+    const burst = el('ellipse', { class: 'burst', cx: x, cy: WL, rx: 16, ry: 7 }, fx);
+    setTimeout(() => burst.remove(), 700);
+    const n = 5 + Math.min(5, Math.round(speed / 70));
+    for (let i = 0; i < n; i++) {
+      const d = el('circle', { class: 'drop', cx: x, cy: WL, r: rnd(1.6, 3.2) }, fx);
+      const p = { x: x + rnd(-6, 6), y: WL - 2, vx: rnd(-150, 150), vy: -rnd(120, 290), t: 0 };
+      p.step = dt => {
+        p.t += dt; p.vy += G * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+        d.setAttribute('cx', p.x); d.setAttribute('cy', p.y);
+        d.setAttribute('opacity', Math.max(0, 1 - p.t * .9));
+        if (p.y > WL + 6 && p.vy > 0 || p.t > 1.4) { d.remove(); return true; }
+        return false;
+      };
+      addBody(p);
+    }
+  }
+
+  /* ---------- reload ---------- */
+  resetBtn.addEventListener('click', () => {
+    const gone = boxes.filter(b => b.gone);
+    if (!gone.length) { say('All aboard already!'); return; }
+    gone.forEach(b => { if (b.body) { bodies.delete(b.body); b.body = null; } });
+    boxes.forEach(b => cargo.appendChild(b.el));
+    gone.sort((a, b) => a.tier - b.tier || a.bay - b.bay);
+    gone.forEach((b, i) => {
+      b.gone = false;
+      b.el.setAttribute('transform', `translate(${b.x} ${b.y})`);
+      b.el.style.opacity = ''; b.el.style.visibility = '';
+      if (reduceMotion) return;
+      b.el.animate([
+        { transform: `translate(${b.x}px, ${b.y - 170}px)`, opacity: 0 },
+        { transform: `translate(${b.x}px, ${b.y - 150}px)`, opacity: 1, offset: .1 },
+        { transform: `translate(${b.x}px, ${b.y + 3}px)`, offset: .72 },
+        { transform: `translate(${b.x}px, ${b.y - 2}px)`, offset: .86 },
+        { transform: `translate(${b.x}px, ${b.y}px)`, opacity: 1 }
+      ], { duration: 620, delay: i * 85, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'backwards' });
+      wobble.animate(
+        [{ transform: 'translateY(0)' }, { transform: 'translateY(1.6px)', offset: .4 }, { transform: 'translateY(0)' }],
+        { duration: 320, delay: i * 85 + 440, easing: 'ease-out', composite: 'add' }
+      );
+    });
+    say('Reloaded! 🏗️');
+  });
+</script>
+</body>
+</html>
